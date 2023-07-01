@@ -21,17 +21,16 @@ func CreateProductHandler(c *fiber.Ctx) error {
 	errors := models.ValidateStruct(payload)
 	if errors != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(errors)
-
 	}
 
 	now := time.Now()
 	newProduct := models.Product{
-		Title:     payload.Title,
-		Content:   payload.Content,
-		Category:  payload.Category,
-		Published: payload.Published,
-		CreatedAt: now,
-		UpdatedAt: now,
+		Title:      payload.Title,
+		Content:    payload.Content,
+		CategoryID: payload.CategoryID, // Here's the change
+		Published:  payload.Published,
+		CreatedAt:  now,
+		UpdatedAt:  now,
 	}
 
 	result := initializers.DB.Create(&newProduct)
@@ -84,8 +83,8 @@ func UpdateProduct(c *fiber.Ctx) error {
 	if payload.Title != "" {
 		updates["title"] = payload.Title
 	}
-	if payload.Category != "" {
-		updates["category"] = payload.Category
+	if payload.CategoryID != "" { // Here's the change
+		updates["category_id"] = payload.CategoryID // Here's the change
 	}
 	if payload.Content != "" {
 		updates["content"] = payload.Content
