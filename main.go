@@ -1,38 +1,47 @@
 package main
 
 import (
-	"github.com/Jakub-Syrek/Ebiznes_Zadanie4/models"
-	"github.com/labstack/echo/v4"
-	"github.com/jinzhu/gorm"
-	_ "github.com/mattn/go-sqlite3"
-	"net/http"
+	"log"
+
+	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
+	"github.com/gofiber/fiber/v2/middleware/logger"
+	"github.com/wpcodevo/golang-fiber-mysql/controllers"
+	"github.com/wpcodevo/golang-fiber-mysql/initializers"
 )
 
-var DB *gorm.DB
-
-func main() {
-	DB = initDB()
-
-	e := echo.New()
-
-	// Endpointy
-	e.GET("/products", GetProducts)
-	e.POST("/products", CreateProduct)
-	e.GET("/products/:id", GetProduct)
-	e.PUT("/products/:id", UpdateProduct)
-	e.DELETE("/products/:id", DeleteProduct)
-
-	// Uruchamiamy serwer
-	e.Start(":8000")
+func init() {
+	initializers.ConnectDB()
 }
 
-func initDB() *gorm.DB {
-	db, err := gorm.Open("sqlite3", "test.db")
-	if err != nil {
-		panic("failed to connect database")
-	}
+func main() {
+	app := fiber.New()
+	micro := fiber.New()
 
-	db.AutoMigrate(&Product{}, &Category{})
+	app.Mount("/api", micro)
+	app.Use(logger.New())
+	app.Use(cors.New(cors.Config{
+		AllowOrigins:     "http://localhost:3000",
+		AllowHeaders:     "Origin, Content-Type, Accept",
+		AllowMethods:     "GET, POST, PATCH, DELETE",
+		AllowCredentials: true,
+	}))
 
-	return db
+	micro.Route("/notes", func(router fiber.Router) {
+		router.Post("/", controllers.CreateNoteHandler)
+		router.Get("", controllers.FindNotes)
+	})
+	micro.Route("/notes/:noteId", func(router fiber.Router) {
+		router.Delete("", controllers.DeleteNote)
+		router.Get("", controllers.FindNoteById)
+		router.Patch("", controllers.UpdateNote)
+	})
+	micro.Get("/healthchecker", func(c *fiber.Ctx) error {
+		return c.Status(200).JSON(fiber.Map{
+			"status":  "success",
+			"message": "Welcome to Golang, Fiber, SQLite, and GORM",
+		})
+	})
+
+	log.Fatal(app.Listen(":8000"))
 }
