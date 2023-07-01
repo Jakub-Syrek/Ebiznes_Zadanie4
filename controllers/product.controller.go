@@ -11,8 +11,8 @@ import (
 	"gorm.io/gorm"
 )
 
-func CreateNoteHandler(c *fiber.Ctx) error {
-	var payload *models.CreateNoteSchema
+func CreateProductHandler(c *fiber.Ctx) error {
+	var payload *models.CreateProductSchema
 
 	if err := c.BodyParser(&payload); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"status": "fail", "message": err.Error()})
@@ -25,7 +25,7 @@ func CreateNoteHandler(c *fiber.Ctx) error {
 	}
 
 	now := time.Now()
-	newNote := models.Note{
+	newProduct := models.Product{
 		Title:     payload.Title,
 		Content:   payload.Content,
 		Category:  payload.Category,
@@ -34,7 +34,7 @@ func CreateNoteHandler(c *fiber.Ctx) error {
 		UpdatedAt: now,
 	}
 
-	result := initializers.DB.Create(&newNote)
+	result := initializers.DB.Create(&newProduct)
 
 	if result.Error != nil && strings.Contains(result.Error.Error(), "Duplicate entry") {
 		return c.Status(fiber.StatusConflict).JSON(fiber.Map{"status": "fail", "message": "Title already exist, please use another title"})
@@ -42,10 +42,10 @@ func CreateNoteHandler(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadGateway).JSON(fiber.Map{"status": "error", "message": result.Error.Error()})
 	}
 
-	return c.Status(fiber.StatusCreated).JSON(fiber.Map{"status": "success", "data": fiber.Map{"note": newNote}})
+	return c.Status(fiber.StatusCreated).JSON(fiber.Map{"status": "success", "data": fiber.Map{"product": newProduct}})
 }
 
-func FindNotes(c *fiber.Ctx) error {
+func FindProducts(c *fiber.Ctx) error {
 	var page = c.Query("page", "1")
 	var limit = c.Query("limit", "10")
 
@@ -53,29 +53,29 @@ func FindNotes(c *fiber.Ctx) error {
 	intLimit, _ := strconv.Atoi(limit)
 	offset := (intPage - 1) * intLimit
 
-	var notes []models.Note
-	results := initializers.DB.Limit(intLimit).Offset(offset).Find(&notes)
+	var products []models.Product
+	results := initializers.DB.Limit(intLimit).Offset(offset).Find(&products)
 	if results.Error != nil {
 		return c.Status(fiber.StatusBadGateway).JSON(fiber.Map{"status": "error", "message": results.Error})
 	}
 
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{"status": "success", "results": len(notes), "notes": notes})
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{"status": "success", "results": len(products), "products": products})
 }
 
-func UpdateNote(c *fiber.Ctx) error {
-	noteId := c.Params("noteId")
+func UpdateProduct(c *fiber.Ctx) error {
+	productId := c.Params("productId")
 
-	var payload *models.UpdateNoteSchema
+	var payload *models.UpdateProductSchema
 
 	if err := c.BodyParser(&payload); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"status": "fail", "message": err.Error()})
 	}
 
-	var note models.Note
-	result := initializers.DB.First(&note, "id = ?", noteId)
+	var product models.Product
+	result := initializers.DB.First(&product, "id = ?", productId)
 	if err := result.Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
-			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"status": "fail", "message": "No note with that Id exists"})
+			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"status": "fail", "message": "No product with that Id exists"})
 		}
 		return c.Status(fiber.StatusBadGateway).JSON(fiber.Map{"status": "fail", "message": err.Error()})
 	}
@@ -97,33 +97,33 @@ func UpdateNote(c *fiber.Ctx) error {
 
 	updates["updated_at"] = time.Now()
 
-	initializers.DB.Model(&note).Updates(updates)
+	initializers.DB.Model(&product).Updates(updates)
 
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{"status": "success", "data": fiber.Map{"note": note}})
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{"status": "success", "data": fiber.Map{"product": product}})
 }
 
-func FindNoteById(c *fiber.Ctx) error {
-	noteId := c.Params("noteId")
+func FindProductById(c *fiber.Ctx) error {
+	productId := c.Params("productId")
 
-	var note models.Note
-	result := initializers.DB.First(&note, "id = ?", noteId)
+	var product models.Product
+	result := initializers.DB.First(&product, "id = ?", productId)
 	if err := result.Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
-			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"status": "fail", "message": "No note with that Id exists"})
+			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"status": "fail", "message": "No product with that Id exists"})
 		}
 		return c.Status(fiber.StatusBadGateway).JSON(fiber.Map{"status": "fail", "message": err.Error()})
 	}
 
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{"status": "success", "data": fiber.Map{"note": note}})
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{"status": "success", "data": fiber.Map{"product": product}})
 }
 
-func DeleteNote(c *fiber.Ctx) error {
-	noteId := c.Params("noteId")
+func DeleteProduct(c *fiber.Ctx) error {
+	productId := c.Params("productId")
 
-	result := initializers.DB.Delete(&models.Note{}, "id = ?", noteId)
+	result := initializers.DB.Delete(&models.Product{}, "id = ?", productId)
 
 	if result.RowsAffected == 0 {
-		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"status": "fail", "message": "No note with that Id exists"})
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"status": "fail", "message": "No product with that Id exists"})
 	} else if result.Error != nil {
 		return c.Status(fiber.StatusBadGateway).JSON(fiber.Map{"status": "error", "message": result.Error})
 	}

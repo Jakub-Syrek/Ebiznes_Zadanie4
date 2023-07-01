@@ -8,9 +8,9 @@ import (
 	"gorm.io/gorm"
 )
 
-type Note struct {
+type Product struct {
 	ID        string    `gorm:"type:char(36);primary_key" json:"id,omitempty"`
-	Title     string    `gorm:"type:varchar(255);uniqueIndex:idx_notes_title,LENGTH(255);not null" json:"title,omitempty"`
+	Title     string    `gorm:"type:varchar(255);uniqueIndex:idx_products_title,LENGTH(255);not null" json:"title,omitempty"`
 	Content   string    `gorm:"not null" json:"content,omitempty"`
 	Category  string    `gorm:"varchar(100)" json:"category,omitempty"`
 	Published bool      `gorm:"default:false;not null" json:"published"`
@@ -18,8 +18,8 @@ type Note struct {
 	UpdatedAt time.Time `gorm:"not null;default:'1970-01-01 00:00:01';ON UPDATE CURRENT_TIMESTAMP" json:"updatedAt,omitempty"`
 }
 
-func (note *Note) BeforeCreate(tx *gorm.DB) (err error) {
-	note.ID = uuid.New().String()
+func (product *Product) BeforeCreate(tx *gorm.DB) (err error) {
+	product.ID = uuid.New().String()
 	return nil
 }
 
@@ -46,14 +46,14 @@ func ValidateStruct[T any](payload T) []*ErrorResponse {
 	return errors
 }
 
-type CreateNoteSchema struct {
+type CreateProductSchema struct {
 	Title     string `json:"title" validate:"required"`
 	Content   string `json:"content" validate:"required"`
 	Category  string `json:"category,omitempty"`
 	Published bool   `json:"published,omitempty"`
 }
 
-type UpdateNoteSchema struct {
+type UpdateProductSchema struct {
 	Title     string `json:"title,omitempty"`
 	Content   string `json:"content,omitempty"`
 	Category  string `json:"category,omitempty"`

@@ -27,14 +27,14 @@ func main() {
 		AllowCredentials: true,
 	}))
 
-	micro.Route("/notes", func(router fiber.Router) {
-		router.Post("/", controllers.CreateNoteHandler)
-		router.Get("", controllers.FindNotes)
+	micro.Route("/products", func(router fiber.Router) {
+		router.Post("/", controllers.CreateProductHandler)
+		router.Get("", controllers.FindProducts)
 	})
-	micro.Route("/notes/:noteId", func(router fiber.Router) {
-		router.Delete("", controllers.DeleteNote)
-		router.Get("", controllers.FindNoteById)
-		router.Patch("", controllers.UpdateNote)
+	micro.Route("/products/:productId", func(router fiber.Router) {
+		router.Delete("", controllers.DeleteProduct)
+		router.Get("", controllers.FindProductById)
+		router.Patch("", controllers.UpdateProduct)
 	})
 	micro.Get("/healthchecker", func(c *fiber.Ctx) error {
 		return c.Status(200).JSON(fiber.Map{
