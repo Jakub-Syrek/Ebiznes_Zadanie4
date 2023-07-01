@@ -1,106 +1,66 @@
 package main
 
 import (
-	"net/http"
-	"strconv"
-
+	"github.com/Jakub-Syrek/Ebiznes_Zadanie4/models"
 	"github.com/labstack/echo/v4"
-	"gorm.io/gorm"
+	"github.com/jinzhu/gorm"
+	"net/http"
 )
 
-// Kontroler dla Produktów
-type ProduktController struct {
-	db *gorm.DB
+var DB *gorm.DB
+
+func GetProducts(c echo.Context) error {
+	var products []models.Product
+	DB.Preload("Category").Find(&products)
+
+	return c.JSON(http.StatusOK, products)
 }
 
-// Pobierz wszystkie Produkty
-func (c *ProduktController) GetProdukty(ctx echo.Context) error {
-	var produkty []Produkt
-	result := c.db.Preload("Sklepy").Find(&produkty)
-	if result.Error != nil {
-		return ctx.JSON(http.StatusInternalServerError, result.Error)
+func CreateProduct(c echo.Context) error {
+	product := new(Product)
+	if err := c.Bind(product); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
-	return ctx.JSON(http.StatusOK, produkty)
+
+	if err := DB.Create(product).Error; err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	return c.JSON(http.StatusCreated, product)
 }
 
-// Pobierz pojedynczy Produkt
-func (c *ProduktController) GetProdukt(ctx echo.Context) error {
-	id, err := strconv.Atoi(ctx.Param("id"))
-	if err != nil {
-		return ctx.JSON(http.StatusBadRequest, "Invalid ID")
+func GetProduct(c echo.Context) error {
+	id := c.Param("id")
+
+	var product Product
+	if err := DB.Preload("Category").First(&product, id).Error; err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
-	var produkt Produkt
-	result := c.db.Preload("Sklepy").First(&produkt, id)
-	if result.Error != nil {
-		if result.Error == gorm.ErrRecordNotFound {
-			return ctx.JSON(http.StatusNotFound, "Product not found")
-		}
-		return ctx.JSON(http.StatusInternalServerError, result.Error)
-	}
-	return ctx.JSON(http.StatusOK, produkt)
+	return c.JSON(http.StatusOK, product)
 }
 
-// Utwórz nowy Produkt
-func (c *ProduktController) CreateProdukt(ctx echo.Context) error {
-	produkt := new(Produkt)
-	if err := ctx.Bind(produkt); err != nil {
-		return ctx.JSON(http.StatusBadRequest, "Invalid data")
+func UpdateProduct(c echo.Context) error {
+	id := c.Param("id")
+
+	product := new(Product)
+	if err := c.Bind(product); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
-	result := c.db.Create(&produkt)
-	if result.Error != nil {
-		return ctx.JSON(http.StatusInternalServerError, result.Error)
+	if err := DB.Model(product).Where("id = ?", id).Updates(product).Error; err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
-	return ctx.JSON(http.StatusCreated, produkt)
+
+	return c.JSON(http.StatusOK, product)
 }
 
-// Zaktualizuj Produkt
-func (c *ProduktController) UpdateProdukt(ctx echo.Context) error {
-	id, err := strconv.Atoi(ctx.Param("id"))
-	if err != nil {
-		return ctx.JSON(http.StatusBadRequest, "Invalid ID")
+func DeleteProduct(c echo.Context) error {
+	id := c.Param("id")
+
+	if err := DB.Where("id = ?", id).Delete(&Product{}).Error; err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
-	var produkt Produkt
-	result := c.db.First(&produkt, id)
-	if result.Error != nil {
-		if result.Error == gorm.ErrRecordNotFound {
-			return ctx.JSON(http.StatusNotFound, "Product not found")
-		}
-		return ctx.JSON(http.StatusInternalServerError, result.Error)
-	}
-
-	if err := ctx.Bind(&produkt); err != nil {
-		return ctx.JSON(http.StatusBadRequest, "Invalid data")
-	}
-
-	result = c.db.Save(&produkt)
-	if result.Error != nil {
-		return ctx.JSON(http.StatusInternalServerError, result.Error)
-	}
-	return ctx.JSON(http.StatusOK, produkt)
-}
-
-// Usuń Produkt
-func (c *ProduktController) DeleteProdukt(ctx echo.Context) error {
-	id, err := strconv.Atoi(ctx.Param("id"))
-	if err != nil {
-		return ctx.JSON(http.StatusBadRequest, "Invalid ID")
-	}
-
-	var produkt Produkt
-	result := c.db.First(&produkt, id)
-	if result.Error != nil {
-		if result.Error == gorm.ErrRecordNotFound {
-			return ctx.JSON(http.StatusNotFound, "Product not found")
-		}
-		return ctx.JSON(http.StatusInternalServerError, result.Error)
-	}
-
-	result = c.db.Delete(&produkt)
-	if result.Error != nil {
-		return ctx.JSON(http.StatusInternalServerError, result.Error)
-	}
-	return ctx.NoContent(http.StatusNoContent)
+	return c.NoContent(http.StatusNoContent)
 }

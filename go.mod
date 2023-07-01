@@ -3,6 +3,7 @@ module github.com/Jakub-Syrek/Ebiznes_Zadanie4
 go 1.20
 
 require (
+	github.com/jinzhu/gorm v1.9.16
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/labstack/echo/v4 v4.10.2 // indirect

@@ -1,52 +1,38 @@
 package main
 
 import (
+	"github.com/Jakub-Syrek/Ebiznes_Zadanie4/models"
 	"github.com/labstack/echo/v4"
-	"gorm.io/driver/sqlite"
-	"gorm.io/gorm"
+	"github.com/jinzhu/gorm"
+	_ "github.com/mattn/go-sqlite3"
+	"net/http"
 )
 
-// Struktura modelu Produktu
-type Produkt struct {
-	gorm.Model
-	Nazwa  string
-	Cena   float64
-	Skład  string
-	Sklepy []Sklep `gorm:"many2many:produkty_sklepy;"`
-}
-
-// Struktura modelu Sklepu
-type Sklep struct {
-	gorm.Model
-	Nazwa    string
-	Produkty []Produkt `gorm:"many2many:produkty_sklepy;"`
-}
+var DB *gorm.DB
 
 func main() {
-	// Inicjalizacja bazy danych SQLite
-	db, err := gorm.Open(sqlite.Open("database.db"), &gorm.Config{})
-	if err != nil {
-		panic("Failed to connect to database!")
-	}
-	
-	// Automatyczne migracje tabel
-	db.AutoMigrate(&Produkt{}, &Sklep{})
+	DB = initDB()
 
-	// Inicjalizacja frameworku Echo
 	e := echo.New()
 
-	// Utworzenie kontrolera dla Produktów
-	produktController := &ProduktController{
-		db: db,
+	// Endpointy
+	e.GET("/products", GetProducts)
+	e.POST("/products", CreateProduct)
+	e.GET("/products/:id", GetProduct)
+	e.PUT("/products/:id", UpdateProduct)
+	e.DELETE("/products/:id", DeleteProduct)
+
+	// Uruchamiamy serwer
+	e.Start(":8000")
+}
+
+func initDB() *gorm.DB {
+	db, err := gorm.Open("sqlite3", "test.db")
+	if err != nil {
+		panic("failed to connect database")
 	}
 
-	// Zdefiniowanie endpointów dla Produktów
-	e.GET("/produkty", produktController.GetProdukty)
-	e.POST("/produkty", produktController.CreateProdukt)
-	e.GET("/produkty/:id", produktController.GetProdukt)
-	e.PUT("/produkty/:id", produktController.UpdateProdukt)
-	e.DELETE("/produkty/:id", produktController.DeleteProdukt)
+	db.AutoMigrate(&Product{}, &Category{})
 
-	// Uruchomienie serwera na porcie 8080
-	e.Start(":8080")
+	return db
 }
