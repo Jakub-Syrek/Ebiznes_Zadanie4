@@ -13,6 +13,23 @@ type Category struct {
 	Name string `gorm:"type:varchar(100);not null;unique" json:"name"`
 }
 
+type Basket struct {
+	ID        string         `gorm:"type:char(36);primary_key" json:"id,omitempty"`
+	UserID    string         `gorm:"type:char(36);not null" json:"userId,omitempty"`
+	CreatedAt time.Time      `gorm:"not null;default:'1970-01-01 00:00:01'" json:"createdAt,omitempty"`
+	UpdatedAt time.Time      `gorm:"not null;default:'1970-01-01 00:00:01';ON UPDATE CURRENT_TIMESTAMP" json:"updatedAt,omitempty"`
+	Items     []BasketItem   `gorm:"foreignKey:BasketID" json:"items,omitempty"`
+}
+
+type BasketItem struct {
+	ID        string    `gorm:"type:char(36);primary_key" json:"id,omitempty"`
+	BasketID  string    `gorm:"type:char(36);not null" json:"basketId,omitempty"`
+	ProductID string    `gorm:"type:char(36);not null" json:"productId,omitempty"`
+	Quantity  int       `gorm:"not null" json:"quantity"`
+	CreatedAt time.Time `gorm:"not null;default:'1970-01-01 00:00:01'" json:"createdAt,omitempty"`
+	UpdatedAt time.Time `gorm:"not null;default:'1970-01-01 00:00:01';ON UPDATE CURRENT_TIMESTAMP" json:"updatedAt,omitempty"`
+}
+
 type Product struct {
 	ID        string     `gorm:"type:char(36);primary_key" json:"id,omitempty"`
 	Title     string     `gorm:"type:varchar(255);uniqueIndex:idx_products_title,LENGTH(255);not null" json:"title,omitempty"`
@@ -72,4 +89,10 @@ type UpdateProductSchema struct {
 	Content   string `json:"content,omitempty"`
 	CategoryID  string `json:"categoryId,omitempty"`
 	Published *bool  `json:"published,omitempty"`
+}
+
+type AddProductToBasketSchema struct {
+	BasketID  string `json:"basketId" validate:"required"`
+	ProductID string `json:"productId" validate:"required"`
+	Quantity  int    `json:"quantity" validate:"required,gte=1"`
 }

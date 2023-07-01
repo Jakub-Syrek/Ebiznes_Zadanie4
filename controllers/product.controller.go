@@ -129,3 +129,29 @@ func DeleteProduct(c *fiber.Ctx) error {
 
 	return c.SendStatus(fiber.StatusNoContent)
 }
+
+
+
+func AddProductToBasket(c *fiber.Ctx) error {
+	var payload *models.AddProductToBasketSchema
+
+	if err := c.BodyParser(&payload); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"status": "fail", "message": err.Error()})
+	}
+
+	newBasketItem := models.BasketItem{
+		BasketID:  payload.BasketID,
+		ProductID: payload.ProductID,
+		Quantity:  payload.Quantity,
+	}
+
+	result := initializers.DB.Create(&newBasketItem)
+
+	if result.Error != nil {
+		return c.Status(fiber.StatusBadGateway).JSON(fiber.Map{"status": "error", "message": result.Error.Error()})
+	}
+
+	return c.Status(fiber.StatusCreated).JSON(fiber.Map{"status": "success", "data": fiber.Map{"basketItem": newBasketItem}})
+}
+
+

@@ -42,6 +42,6 @@ func main() {
 			"message": "Welcome to Golang, Fiber, SQLite, and GORM",
 		})
 	})
-
+	micro.Post("/basket/items", controllers.AddProductToBasket)
 	log.Fatal(app.Listen(":8000"))
 }
