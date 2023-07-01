@@ -130,8 +130,6 @@ func DeleteProduct(c *fiber.Ctx) error {
 	return c.SendStatus(fiber.StatusNoContent)
 }
 
-
-
 func AddProductToBasket(c *fiber.Ctx) error {
 	var payload *models.AddProductToBasketSchema
 
@@ -153,5 +151,3 @@ func AddProductToBasket(c *fiber.Ctx) error {
 
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{"status": "success", "data": fiber.Map{"basketItem": newBasketItem}})
 }
-
-
